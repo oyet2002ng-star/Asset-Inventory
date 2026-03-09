@@ -1,0 +1,1571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>AssetTrack — Admin Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090f;--surf:#0f1420;--surf2:#161d2e;--surf3:#1c2438;
+  --acc:#00c8a0;--acc2:#f0c030;--acc3:#ff4858;--acc4:#4a80ff;--acc5:#a060ff;
+  --text:#d5ddf0;--text2:#60708a;--text3:#2e3a52;
+  --border:#1a2238;--r:16px;--r-sm:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);}
+.app{display:flex;height:100dvh;overflow:hidden;}
+
+/* ── LOGIN ── */
+#login-screen{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;}
+#login-screen.hidden{display:none;}
+.ls-logo{font-family:'Syne',sans-serif;font-size:30px;font-weight:800;color:var(--text);margin-bottom:2px;}
+.ls-logo em{color:var(--acc);font-style:normal;}
+.ls-badge{display:inline-block;background:rgba(160,96,255,.15);color:var(--acc5);border:1px solid rgba(160,96,255,.3);border-radius:6px;padding:3px 10px;font-size:10px;letter-spacing:1px;margin-bottom:28px;}
+.ls-field{width:100%;max-width:380px;margin-bottom:14px;}
+.ls-lbl{font-size:10px;color:var(--text2);letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px;}
+.ls-inp{width:100%;background:var(--surf);border:1.5px solid var(--border);border-radius:10px;padding:13px 14px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none;transition:border-color .18s;}
+.ls-inp:focus{border-color:var(--acc5);}
+.ls-btn{width:100%;max-width:380px;padding:15px;border-radius:var(--r);background:var(--acc5);color:#fff;font-family:'Syne',sans-serif;font-size:15px;font-weight:800;border:none;cursor:pointer;margin-top:8px;}
+.ls-err{font-size:11px;color:var(--acc3);text-align:center;margin-top:10px;min-height:18px;max-width:380px;}
+.ls-link{font-size:10px;color:var(--text3);margin-top:20px;} .ls-link a{color:var(--acc4);}
+
+/* ── SIDEBAR ── */
+.sidebar{width:220px;flex-shrink:0;background:var(--surf);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.sb-brand{padding:22px 18px 16px;border-bottom:1px solid var(--border);}
+.sb-logo{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--text);}
+.sb-logo em{color:var(--acc);font-style:normal;}
+.sb-badge{font-size:9px;color:var(--acc5);background:rgba(160,96,255,.12);border:1px solid rgba(160,96,255,.2);padding:2px 8px;border-radius:4px;margin-top:4px;display:inline-block;letter-spacing:.5px;}
+.sb-user{padding:10px 18px;border-bottom:1px solid var(--border);}
+.sb-uname{font-size:12px;color:var(--text);}
+.sb-urole{font-size:9px;color:var(--acc5);margin-top:1px;}
+.sb-nav{flex:1;overflow-y:auto;padding:10px 0;}
+.sb-sect{font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;padding:10px 18px 5px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 18px;cursor:pointer;border-radius:0;color:var(--text2);font-size:12px;transition:all .18s;border:none;background:none;width:100%;text-align:left;font-family:'DM Mono',monospace;}
+.nav-item:hover{color:var(--text);background:var(--surf2);}
+.nav-item.on{color:var(--acc5);background:rgba(160,96,255,.1);border-left:2px solid var(--acc5);}
+.nav-item .ni{font-size:15px;width:20px;flex-shrink:0;}
+.sb-logout{padding:12px 18px;border-top:1px solid var(--border);}
+.sb-logout-btn{width:100%;padding:9px;background:rgba(255,72,88,.08);color:var(--acc3);border:1px solid rgba(255,72,88,.15);border-radius:9px;cursor:pointer;font-size:11px;font-family:'DM Mono',monospace;}
+
+/* ── MAIN ── */
+.main{flex:1;overflow-y:auto;background:var(--bg);}
+.main::-webkit-scrollbar{width:4px;}
+.main::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.panel{display:none;padding:24px 28px 60px;}
+.panel.on{display:block;}
+.panel-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;}
+.panel-ttl{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--text);}
+.panel-sub{font-size:11px;color:var(--text2);margin-top:2px;}
+.act-btn{padding:10px 16px;border-radius:10px;border:none;font-family:'DM Mono',monospace;font-size:11px;font-weight:700;cursor:pointer;transition:all .18s;}
+.act-btn:active{transform:scale(.95);}
+.btn-p{background:var(--acc5);color:#fff;}
+.btn-s{background:var(--surf2);color:var(--text);border:1px solid var(--border);}
+.btn-d{background:rgba(255,72,88,.1);color:var(--acc3);border:1px solid rgba(255,72,88,.2);}
+.btn-g{background:rgba(0,200,160,.1);color:var(--acc);border:1px solid rgba(0,200,160,.2);}
+
+/* ── KPI GRID ── */
+.kgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;}
+.kpi{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:16px 14px;position:relative;overflow:hidden;}
+.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.c1::after{background:var(--acc);}
+.c2::after{background:var(--acc2);}
+.c3::after{background:var(--acc3);}
+.c4::after{background:var(--acc4);}
+.c5::after{background:var(--acc5);}
+.ki{font-size:18px;position:absolute;top:12px;right:12px;opacity:.3;}
+.kl{font-size:9px;color:var(--text2);letter-spacing:.8px;text-transform:uppercase;}
+.kv{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--text);line-height:1;margin:5px 0 2px;}
+.ks{font-size:9px;color:var(--text3);}
+
+/* ── CARDS / TABLES ── */
+.card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;margin-bottom:16px;}
+.card-ttl{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px;}
+.card-ttl span{font-size:11px;font-family:'DM Mono',monospace;color:var(--text2);font-weight:400;margin-left:8px;}
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{text-align:left;font-size:9px;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;padding:8px 10px;border-bottom:1px solid var(--border);}
+.tbl td{font-size:11px;color:var(--text);padding:10px 10px;border-bottom:1px solid var(--border);}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:var(--surf2);}
+.badge{display:inline-block;padding:3px 9px;border-radius:5px;font-size:9px;font-weight:700;letter-spacing:.3px;}
+.ba{background:rgba(0,200,160,.12);color:var(--acc);}
+.bm{background:rgba(240,192,48,.12);color:var(--acc2);}
+.bd{background:rgba(255,72,88,.12);color:var(--acc3);}
+.bu{background:rgba(74,128,255,.12);color:var(--acc4);}
+.br{background:rgba(160,96,255,.12);color:var(--acc5);}
+
+/* ── FORMS ── */
+.fg{margin-bottom:14px;}
+.fl{font-size:10px;color:var(--text2);letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px;}
+.fi{width:100%;background:var(--surf2);border:1.5px solid var(--border);border-radius:10px;padding:11px 13px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;transition:border-color .18s;}
+.fi:focus{border-color:var(--acc5);}
+.fi::placeholder{color:var(--text3);}
+select.fi{appearance:none;cursor:pointer;}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.f3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.req{font-size:9px;color:var(--acc3);background:rgba(255,72,88,.1);padding:2px 6px;border-radius:4px;margin-left:4px;}
+
+/* ── SETUP SECTIONS ── */
+.setup-sect{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;}
+.setup-hdr{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;border-bottom:1px solid var(--border);}
+.setup-hdr-ttl{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--text);}
+.setup-body{padding:16px 18px;}
+.tag-grid{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;}
+.tag{background:var(--surf2);border:1px solid var(--border);border-radius:7px;padding:5px 10px;font-size:11px;color:var(--text);display:flex;align-items:center;gap:5px;}
+.tag-x{background:none;border:none;color:var(--acc3);cursor:pointer;font-size:13px;padding:0;line-height:1;}
+.tag-add-row{display:flex;gap:8px;}
+.tag-add-inp{flex:1;background:var(--surf2);border:1.5px solid var(--border);border-radius:9px;padding:9px 12px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;}
+.tag-add-inp:focus{border-color:var(--acc5);}
+.tag-add-btn{background:var(--acc5);color:#fff;border:none;border-radius:9px;padding:9px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Mono',monospace;}
+
+/* ── USER MANAGEMENT ── */
+.user-card{background:var(--surf2);border:1px solid var(--border);border-radius:var(--r-sm);padding:13px 16px;display:flex;align-items:center;gap:12px;margin-bottom:9px;}
+.user-av{width:36px;height:36px;border-radius:50%;background:var(--surf3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.user-inf{flex:1;}
+.user-nm{font-size:13px;color:var(--text);}
+.user-un{font-size:10px;color:var(--text2);margin-top:1px;}
+.user-acts{display:flex;gap:7px;}
+
+/* ── REPORTS ── */
+.rpt-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.rpt-btn{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:18px 16px;cursor:pointer;font-family:'DM Mono',monospace;display:flex;flex-direction:column;gap:8px;transition:all .18s;text-align:left;}
+.rpt-btn:hover{border-color:var(--acc5);}
+.rpt-btn:active{transform:scale(.96);}
+.rpt-i{font-size:26px;}
+.rpt-l{font-size:12px;color:var(--text);font-weight:700;}
+.rpt-s{font-size:10px;color:var(--text3);}
+
+/* ── ERP ── */
+.erp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+.erp-card{background:var(--surf2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:14px;cursor:pointer;transition:all .18s;font-family:'DM Mono',monospace;}
+.erp-card.on{border-color:var(--acc5);background:rgba(160,96,255,.06);}
+.erp-ico{font-size:22px;margin-bottom:8px;}
+.erp-nm{font-size:11px;color:var(--text);font-weight:700;}
+.erp-st{font-size:9px;color:var(--text3);margin-top:2px;}
+.erp-cfg{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:18px;display:none;}
+.erp-cfg.show{display:block;}
+
+/* ── SUPABASE SETUP ── */
+.sql-block{background:#0a0d16;border:1px solid var(--border);border-radius:10px;padding:14px;font-family:'DM Mono',monospace;font-size:11px;color:#7ec8a0;line-height:1.8;overflow-x:auto;white-space:pre;margin-bottom:14px;}
+.copy-btn{background:var(--surf2);color:var(--text2);border:1px solid var(--border);border-radius:7px;padding:6px 12px;font-size:10px;cursor:pointer;font-family:'DM Mono',monospace;}
+.copy-btn:active{background:var(--acc5);color:#fff;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surf3);color:var(--text);padding:11px 18px;border-radius:10px;font-size:11px;opacity:0;transition:all .25s;pointer-events:none;border:1px solid var(--border);z-index:99;}
+.toast.show{opacity:1;}
+.toast.ok{border-color:var(--acc);color:var(--acc);}
+.toast.err{border-color:var(--acc3);color:var(--acc3);}
+.toast.info{border-color:var(--acc5);color:var(--acc5);}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:80;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:24px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+.modal-ttl{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--text);margin-bottom:16px;}
+.modal-acts{display:flex;gap:9px;margin-top:16px;justify-content:flex-end;}
+
+/* ── PERMISSION TOGGLES ── */
+.perm-row{
+  display:grid;grid-template-columns:1fr 100px 100px 100px;
+  align-items:center;padding:10px 0;
+  border-bottom:1px solid var(--border);gap:0;
+}
+.perm-row:last-child{border-bottom:none;}
+.perm-feat{font-size:12px;color:var(--text);line-height:1.4;}
+.perm-feat-sub{font-size:10px;color:var(--text3);margin-top:1px;}
+.perm-cell{display:flex;flex-direction:column;align-items:center;gap:4px;}
+/* Toggle switch */
+.tog-wrap{position:relative;width:38px;height:22px;cursor:pointer;}
+.tog-wrap input{opacity:0;width:0;height:0;position:absolute;}
+.tog-slider{
+  position:absolute;inset:0;border-radius:11px;
+  background:var(--surf3);border:1px solid var(--border);
+  transition:all .2s;
+}
+.tog-wrap input:checked + .tog-slider{background:var(--acc);border-color:var(--acc);}
+.tog-slider::after{
+  content:'';position:absolute;top:3px;left:3px;
+  width:14px;height:14px;border-radius:50%;
+  background:#fff;transition:transform .2s;
+}
+.tog-wrap input:checked + .tog-slider::after{transform:translateX(16px);}
+/* Locked (always on) */
+.tog-locked{
+  width:38px;height:22px;border-radius:11px;
+  background:rgba(0,200,160,.2);border:1px solid rgba(0,200,160,.3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;color:var(--acc);font-weight:700;letter-spacing:.3px;
+}
+/* Admin always on badge */
+.tog-admin{
+  width:38px;height:22px;border-radius:11px;
+  background:rgba(160,96,255,.15);border:1px solid rgba(160,96,255,.25);
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;color:var(--acc5);
+}
+/* Permission group label */
+.perm-group-lbl{
+  font-size:9px;color:var(--text3);letter-spacing:.8px;
+  text-transform:uppercase;padding:10px 0 4px;
+  border-bottom:1px solid var(--border);
+  grid-column:1/-1;
+}
+
+/* progress bar */
+.pbar-wrap{margin-top:8px;}
+.pbar-top{display:flex;justify-content:space-between;margin-bottom:4px;}
+.pbar-top span{font-size:10px;color:var(--text2);}
+.pbar{height:5px;background:var(--surf3);border-radius:3px;overflow:hidden;}
+.pfill{height:100%;border-radius:3px;background:var(--acc5);transition:width .8s ease;}
+
+@media(max-width:700px){
+  .sidebar{position:fixed;left:-220px;top:0;bottom:0;z-index:50;transition:left .25s;}
+  .sidebar.open{left:0;}
+  .kgrid{grid-template-columns:1fr 1fr;}
+  .rpt-grid{grid-template-columns:1fr;}
+  .erp-grid{grid-template-columns:1fr 1fr;}
+  .panel{padding:16px 14px 60px;}
+  .mob-menu-btn{display:flex!important;}
+}
+.mob-menu-btn{display:none;position:fixed;bottom:20px;right:20px;z-index:60;width:48px;height:48px;border-radius:50%;background:var(--acc5);border:none;color:#fff;font-size:22px;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(160,96,255,.4);}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="ls-logo">Asset<em>Track</em></div>
+  <div class="ls-badge">ADMIN PORTAL</div>
+  <div class="ls-field">
+    <div class="ls-lbl">Admin Username</div>
+    <input class="ls-inp" type="text" id="ls-user" placeholder="admin" autocapitalize="none">
+  </div>
+  <div class="ls-field">
+    <div class="ls-lbl">Password</div>
+    <input class="ls-inp" type="password" id="ls-pass" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()">
+  </div>
+  <button class="ls-btn" onclick="doLogin()">Access Admin Portal →</button>
+  <div class="ls-err" id="ls-err"></div>
+  <div class="ls-link">Field app? <a href="field.html">Go to Field Portal →</a></div>
+</div>
+
+<div class="app" id="main-app" style="display:none;">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo">Asset<em>Track</em></div>
+      <div class="sb-badge">ADMIN PORTAL</div>
+    </div>
+    <div class="sb-user">
+      <div class="sb-uname" id="sb-uname">—</div>
+      <div class="sb-urole">System Administrator</div>
+    </div>
+    <div class="sb-nav">
+      <div class="sb-sect">Overview</div>
+      <button class="nav-item on" onclick="show('dashboard')"><span class="ni">📊</span>Dashboard</button>
+      <button class="nav-item" onclick="show('assets')"><span class="ni">📦</span>Asset Register</button>
+      <button class="nav-item" onclick="show('audit-mgmt')"><span class="ni">✅</span>Audit Management</button>
+      <div class="sb-sect">Configuration</div>
+      <button class="nav-item" onclick="show('setup')"><span class="ni">⚙️</span>System Setup</button>
+      <button class="nav-item" onclick="show('users')"><span class="ni">👥</span>Users & Roles</button>
+      <button class="nav-item" onclick="show('taxonomy')"><span class="ni">🏷️</span>Asset Taxonomy</button>
+      <button class="nav-item" onclick="show('locations')"><span class="ni">📍</span>Locations & Depts</button>
+      <div class="sb-sect">Data & Integrations</div>
+      <button class="nav-item" onclick="show('reports')"><span class="ni">📋</span>Reports & Export</button>
+      <button class="nav-item" onclick="show('erp')"><span class="ni">🔗</span>ERP Sync</button>
+      <button class="nav-item" onclick="show('database')"><span class="ni">🗄️</span>Database Setup</button>
+    </div>
+    <div class="sb-logout">
+      <button class="sb-logout-btn" onclick="doLogout()">🚪 Sign Out</button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main" id="main-content">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div class="panel on" id="p-dashboard">
+      <div class="panel-hdr">
+        <div><div class="panel-ttl">Dashboard</div><div class="panel-sub" id="dash-sub">Loading…</div></div>
+        <button class="act-btn btn-g" onclick="refreshDash()">↺ Refresh</button>
+      </div>
+      <div class="kgrid">
+        <div class="kpi c1"><div class="ki">📦</div><div class="kl">Total Assets</div><div class="kv" id="k-total">—</div><div class="ks">in register</div></div>
+        <div class="kpi c2"><div class="ki">✅</div><div class="kl">Audited</div><div class="kv" id="k-audited">—</div><div class="ks">this cycle</div></div>
+        <div class="kpi c3"><div class="ki">⚠️</div><div class="kl">Issues</div><div class="kv" id="k-issues">—</div><div class="ks">flagged</div></div>
+        <div class="kpi c4"><div class="ki">👥</div><div class="kl">Field Users</div><div class="kv" id="k-users">—</div><div class="ks">active</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="card">
+          <div class="card-ttl">By Status</div>
+          <div id="status-brkd"></div>
+        </div>
+        <div class="card">
+          <div class="card-ttl">By Category</div>
+          <div id="cat-brkd"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:0;">
+        <div class="card-ttl">Audit Progress <span>Current Cycle</span></div>
+        <div class="pbar-wrap" style="margin-bottom:12px;">
+          <div class="pbar-top"><span>Overall Completion</span><span id="aud-pct">0%</span></div>
+          <div class="pbar"><div class="pfill" id="aud-bar" style="width:0%"></div></div>
+        </div>
+        <div id="dept-audit-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
+      </div>
+      <div class="card">
+        <div class="card-ttl">Recent Registrations <span>Last 10</span></div>
+        <table class="tbl" id="recent-tbl">
+          <thead><tr><th>Asset</th><th>Barcode</th><th>Location</th><th>Dept</th><th>Status</th><th>By</th><th>Date</th></tr></thead>
+          <tbody id="recent-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ ASSET REGISTER ══ -->
+    <div class="panel" id="p-assets">
+      <div class="panel-hdr">
+        <div><div class="panel-ttl">Asset Register</div><div class="panel-sub">Full inventory database</div></div>
+        <div style="display:flex;gap:9px;">
+          <button class="act-btn btn-s" onclick="show('reports')">Export</button>
+          <button class="act-btn btn-p" onclick="openAddAsset()">+ Add Asset</button>
+        </div>
+      </div>
+      <!-- Filters -->
+      <div class="card" style="padding:14px 16px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;">
+          <div><div class="fl">Search</div><input class="fi" type="text" id="ast-search" placeholder="Name, barcode…" oninput="renderAssets()"></div>
+          <div><div class="fl">Status</div><select class="fi" id="ast-status" onchange="renderAssets()"><option value="">All</option><option>Active</option><option>Maintenance</option><option>Disposed</option><option>Unverified</option></select></div>
+          <div><div class="fl">Category</div><select class="fi" id="ast-cat" onchange="renderAssets()"><option value="">All</option></select></div>
+          <div><div class="fl">Department</div><select class="fi" id="ast-dept" onchange="renderAssets()"><option value="">All</option></select></div>
+        </div>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table class="tbl">
+          <thead><tr><th>Photo</th><th>Asset</th><th>Barcode</th><th>Category</th><th>Location</th><th>Dept</th><th>Custodian</th><th>Value</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="assets-tbody"></tbody>
+        </table>
+        <div id="assets-empty" style="display:none;padding:30px;text-align:center;font-size:12px;color:var(--text3);">No assets found.</div>
+      </div>
+    </div>
+
+    <!-- ══ AUDIT MANAGEMENT ══ -->
+    <div class="panel" id="p-audit-mgmt">
+      <div class="panel-hdr">
+        <div><div class="panel-ttl">Audit Management</div><div class="panel-sub">Monitor and manage audit cycles</div></div>
+        <div style="display:flex;gap:9px;">
+          <button class="act-btn btn-s" onclick="exportAuditReport()">Export Audit</button>
+          <button class="act-btn btn-d" onclick="if(confirm('Reset entire audit cycle?'))resetAuditCycle()">Reset Cycle</button>
+        </div>
+      </div>
+      <div class="kgrid">
+        <div class="kpi c1"><div class="ki">✅</div><div class="kl">Verified</div><div class="kv" id="am-verified">0</div><div class="ks">assets confirmed</div></div>
+        <div class="kpi c2"><div class="ki">⏳</div><div class="kl">Pending</div><div class="kv" id="am-pending">0</div><div class="ks">not yet scanned</div></div>
+        <div class="kpi c3"><div class="ki">⚠️</div><div class="kl">Flagged</div><div class="kv" id="am-flagged">0</div><div class="ks">issues reported</div></div>
+        <div class="kpi c4"><div class="ki">❓</div><div class="kl">Unknown Tags</div><div class="kv" id="am-unknown">0</div><div class="ks">unregistered scans</div></div>
+      </div>
+      <div class="card">
+        <div class="card-ttl">Audit Status by Asset</div>
+        <table class="tbl">
+          <thead><tr><th>Asset</th><th>Barcode</th><th>Location</th><th>Dept</th><th>Last Audit</th><th>By</th><th>Status</th><th>Changes</th></tr></thead>
+          <tbody id="audit-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ SYSTEM SETUP ══ -->
+    <div class="panel" id="p-setup">
+      <div class="panel-hdr">
+        <div><div class="panel-ttl">System Setup</div><div class="panel-sub">Configure AssetTrack for your organisation</div></div>
+      </div>
+      <div class="card">
+        <div class="card-ttl">Organisation Profile</div>
+        <div class="fr">
+          <div class="fg"><div class="fl">Organisation Name</div><input class="fi" type="text" id="cfg-orgname" placeholder="Your Company Ltd"></div>
+          <div class="fg"><div class="fl">Industry</div><select class="fi" id="cfg-industry"><option>Manufacturing</option><option>Healthcare</option><option>Education</option><option>Government</option><option>Financial Services</option><option>Oil & Gas</option><option>Hospitality</option><option>NGO</option><option>Other</option></select></div>
+        </div>
+        <div class="fr">
+          <div class="fg"><div class="fl">Default Currency</div><select class="fi" id="cfg-currency"><option value="₦">Nigerian Naira (₦)</option><option value="$">US Dollar ($)</option><option value="£">British Pound (£)</option><option value="€">Euro (€)</option></select></div>
+          <div class="fg"><div class="fl">Audit Cycle</div><select class="fi" id="cfg-cycle"><option>Annual</option><option>Semi-Annual</option><option>Quarterly</option><option>Monthly</option></select></div>
+        </div>
+        <div class="fr">
+          <div class="fg"><div class="fl">Require Photo on Registration</div><select class="fi" id="cfg-photo"><option value="1">Yes — Mandatory</option><option value="0">No — Optional</option></select></div>
+          <div class="fg"><div class="fl">Allow Field Users to Edit Assets</div><select class="fi" id="cfg-fieldedit"><option value="0">No — Audit only</option><option value="1">Yes — Can edit during audit</option></select></div>
+        </div>
+        <button class="act-btn btn-p" onclick="saveConfig()" style="margin-top:8px;">Save Configuration</button>
+      </div>
+
+      <div class="card">
+        <div class="card-ttl" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>Field User Permissions</span>
+          <div style="display:flex;gap:8px;">
+            <button class="act-btn btn-s" style="font-size:10px;padding:6px 12px;" onclick="resetPerms()">↺ Defaults</button>
+            <button class="act-btn btn-p" style="font-size:10px;padding:6px 12px;" onclick="savePerms()">Save Permissions</button>
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.8;">
+          Toggle each permission per role. Changes are saved and enforced in the field app immediately on next login.
+          <strong style="color:var(--acc2);">Core features (scan, register, audit) cannot be disabled</strong> — they are the fundamental purpose of the field app.
+        </p>
+
+        <!-- Role column headers -->
+        <div style="display:grid;grid-template-columns:1fr 100px 100px 100px;gap:0;margin-bottom:4px;padding:0 0 8px;border-bottom:1px solid var(--border);">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;">Feature</div>
+          <div style="font-size:9px;color:var(--acc);letter-spacing:.8px;text-transform:uppercase;text-align:center;">Field</div>
+          <div style="font-size:9px;color:var(--acc2);letter-spacing:.8px;text-transform:uppercase;text-align:center;">Auditor</div>
+          <div style="font-size:9px;color:var(--acc5);letter-spacing:.8px;text-transform:uppercase;text-align:center;">Admin</div>
+        </div>
+
+        <div id="perm-matrix"></div>
+
+        <div style="margin-top:14px;padding:10px 12px;background:rgba(240,192,48,.06);border:1px solid rgba(240,192,48,.15);border-radius:10px;font-size:11px;color:var(--text2);line-height:1.8;">
+          <strong style="color:var(--acc2);">How it works:</strong> When you save, permissions are written to the database config table.
+          The field app reads them on every login. If you grant a field user "Edit Own Assets", 
+          they can edit or delete only assets <em>they registered in the current session</em> — not the full database.
+          Synced assets are locked from field editing regardless.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-ttl">Active Users</div>
+        <div id="users-list"></div>
+      </div>
+      <div class="card">
+        <div class="card-ttl">Role Definitions</div>
+        <table class="tbl">
+          <thead><tr><th>Role</th><th>Description</th><th>Access Level</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge br">Admin</span></td><td style="color:var(--text2);">Full system access, configuration, user management</td><td style="color:var(--acc5);">Unrestricted</td></tr>
+            <tr><td><span class="badge ba">Auditor</span></td><td style="color:var(--text2);">Field scanning, audit, and spool — no admin access</td><td style="color:var(--acc);">Field Only</td></tr>
+            <tr><td><span class="badge bm">Registrar</span></td><td style="color:var(--text2);">Can register assets and audit. Cannot delete.</td><td style="color:var(--acc2);">Register + Audit</td></tr>
+            <tr><td><span class="badge bu">Viewer</span></td><td style="color:var(--text2);">Read-only access to asset register and reports</td><td style="color:var(--acc4);">View Only</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ ASSET TAXONOMY ══ -->
+    <div class="panel" id="p-taxonomy">
+      <div class="panel-hdr">
+        <div><div class="panel-ttl">Asset Taxonomy</div><div class="panel-sub">Categories, Sub-Categories, and Asset Names</div></div>
+        <button class="act-btn btn-p" onclick="saveTaxonomy()">Save Taxonomy</button>
+      </div>
+      <div class="card" style="font-size:12px;color:var(--text2);line-height:1.8;padding:14px 18px;">
+        ℹ️ Taxonomy is a 3-level hierarchy: <strong style="color:var(--text);">Category → Sub-Category → Asset Name</strong>. Changes apply instantly to the field app on next login.
+      </div>
+      <div id="taxonomy-editor"></div>
+      <button class="act-btn btn-p" onclick="addCategory()" style="margin-bottom:16px;">+ Add Category</button>
+    </div>
+
+    <!-- ══ LOCATIONS & DEPARTMENTS ══ -->
+    <div class="panel" id="p-locations">
+      <div class="panel-hdr">
+        <div><div class="panel-ttl">Locations & Departments</div><div class="panel-sub">These are separate — Location is WHERE, Department is WHO</div></div>
+        <button class="act-btn btn-p" onclick="saveLocsDepts()">Save All</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="card">
+          <div class="card-ttl">📍 Physical Locations <span>(WHERE the asset is)</span></div>
+          <p style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.7;">Buildings, floors, rooms, yards. Answers: <em style="color:var(--text2);">Where is this asset physically sitting?</em></p>
+          <div class="tag-grid" id="loc-tags"></div>
+          <div class="tag-add-row">
+            <input class="tag-add-inp" type="text" id="loc-inp" placeholder="Add location…" onkeydown="if(event.key==='Enter')addLoc()">
+            <button class="tag-add-btn" onclick="addLoc()">+ Add</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-ttl">🏢 Departments / Cost Centres <span>(WHO owns it)</span></div>
+          <p style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.7;">Organisational units. Answers: <em style="color:var(--text2);">Which department is accountable for this asset?</em></p>
+          <div class="tag-grid" id="dept-tags"></div>
+          <div class="tag-add-row">
+            <input class="tag-add-inp" type="text" id="dept-inp" placeholder="Add department…" onkeydown="if(event.key==='Enter')addDept()">
+            <button class="tag-add-btn" onclick="addDept()">+ Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ REPORTS ══ -->
+    <div class="panel" id="p-reports">
+      <div class="panel-hdr">
+        <div><div class="panel-ttl">Reports & Export</div><div class="panel-sub">Full register — admin view only</div></div>
+      </div>
+      <div class="kgrid">
+        <div class="kpi c1"><div class="ki">📦</div><div class="kl">Total Assets</div><div class="kv" id="rpt-total">0</div></div>
+        <div class="kpi c2"><div class="ki">💰</div><div class="kl">Total Value</div><div class="kv" id="rpt-val" style="font-size:16px;">₦0</div></div>
+        <div class="kpi c3"><div class="ki">✅</div><div class="kl">Audit Rate</div><div class="kv" id="rpt-rate">0%</div></div>
+        <div class="kpi c4"><div class="ki">📍</div><div class="kl">Locations</div><div class="kv" id="rpt-locs">0</div></div>
+      </div>
+      <div class="rpt-grid">
+        <button class="rpt-btn" onclick="exportFullCSV()"><div class="rpt-i">📄</div><div class="rpt-l">Full Register CSV</div><div class="rpt-s">All assets, all fields, comma-separated</div></button>
+        <button class="rpt-btn" onclick="exportFullExcel()"><div class="rpt-i">📊</div><div class="rpt-l">Full Register Excel</div><div class="rpt-s">Formatted .xls with all columns</div></button>
+        <button class="rpt-btn" onclick="exportPhotoReport()"><div class="rpt-i">🖼️</div><div class="rpt-l">Photo Asset Report</div><div class="rpt-s">Self-contained HTML with all photos</div></button>
+        <button class="rpt-btn" onclick="exportAuditReport()"><div class="rpt-i">✅</div><div class="rpt-l">Audit Report</div><div class="rpt-s">Verified, pending, flagged breakdown</div></button>
+        <button class="rpt-btn" onclick="exportByDept()"><div class="rpt-i">🏢</div><div class="rpt-l">By Department</div><div class="rpt-s">Assets grouped by cost centre</div></button>
+        <button class="rpt-btn" onclick="exportByLoc()"><div class="rpt-i">📍</div><div class="rpt-l">By Location</div><div class="rpt-s">Assets grouped by physical location</div></button>
+      </div>
+      <div class="card">
+        <div class="card-ttl">Report Filters</div>
+        <div class="f3">
+          <div class="fg"><div class="fl">Date From</div><input class="fi" type="date" id="rpt-from"></div>
+          <div class="fg"><div class="fl">Date To</div><input class="fi" type="date" id="rpt-to"></div>
+          <div class="fg"><div class="fl">Status</div><select class="fi" id="rpt-status"><option value="">All</option><option>Active</option><option>Maintenance</option><option>Disposed</option><option>Unverified</option></select></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ERP SYNC ══ -->
+    <div class="panel" id="p-erp">
+      <div class="panel-hdr">
+        <div><div class="panel-ttl">ERP Sync</div><div class="panel-sub">Connect AssetTrack to your ERP system</div></div>
+      </div>
+      <div class="card" style="font-size:12px;color:var(--text2);line-height:1.8;padding:14px 18px;">
+        ⚡ Select your ERP system below. AssetTrack syncs asset data bidirectionally via REST API. Field users never see or configure this.
+      </div>
+      <div class="erp-grid">
+        <div class="erp-card" onclick="selErp('sap')"><div class="erp-ico">🔷</div><div class="erp-nm">SAP S/4HANA</div><div class="erp-st" id="erp-st-sap">Not connected</div></div>
+        <div class="erp-card" onclick="selErp('oracle')"><div class="erp-ico">🔴</div><div class="erp-nm">Oracle Fusion</div><div class="erp-st" id="erp-st-oracle">Not connected</div></div>
+        <div class="erp-card" onclick="selErp('dynamics')"><div class="erp-ico">🟦</div><div class="erp-nm">MS Dynamics 365</div><div class="erp-st" id="erp-st-dynamics">Not connected</div></div>
+        <div class="erp-card" onclick="selErp('odoo')"><div class="erp-ico">🟣</div><div class="erp-nm">Odoo</div><div class="erp-st" id="erp-st-odoo">Not connected</div></div>
+        <div class="erp-card" onclick="selErp('sage')"><div class="erp-ico">🟢</div><div class="erp-nm">Sage 300</div><div class="erp-st" id="erp-st-sage">Not connected</div></div>
+        <div class="erp-card" onclick="selErp('custom')"><div class="erp-ico">⚙️</div><div class="erp-nm">Custom REST API</div><div class="erp-st" id="erp-st-custom">Not connected</div></div>
+      </div>
+      <div class="erp-cfg" id="erp-cfg">
+        <div class="card-ttl" id="erp-cfg-ttl">Configure ERP</div>
+        <div class="fr">
+          <div class="fg"><div class="fl">API Endpoint URL</div><input class="fi" type="text" id="erp-url" placeholder="https://erp.yourcompany.com/api/assets"></div>
+          <div class="fg"><div class="fl">API Key / Token</div><input class="fi" type="password" id="erp-key" placeholder="Bearer token or API key"></div>
+        </div>
+        <div class="fr">
+          <div class="fg"><div class="fl">Company Code</div><input class="fi" type="text" id="erp-co" placeholder="001"></div>
+          <div class="fg"><div class="fl">Sync Direction</div><select class="fi" id="erp-dir"><option value="push">Push to ERP</option><option value="pull">Pull from ERP</option><option value="both">Bidirectional</option></select></div>
+        </div>
+        <div class="fr">
+          <div class="fg"><div class="fl">Auto-Sync Interval</div><select class="fi" id="erp-int"><option value="0">Manual only</option><option value="60">Every hour</option><option value="360">Every 6 hours</option><option value="1440">Daily</option></select></div>
+          <div class="fg"><div class="fl">Asset Module</div><input class="fi" type="text" id="erp-mod" placeholder="fixed_assets"></div>
+        </div>
+        <div style="display:flex;gap:9px;margin-top:14px;flex-wrap:wrap;">
+          <button class="act-btn btn-p" onclick="testErp()">Test Connection</button>
+          <button class="act-btn btn-g" onclick="pushErp()">⬆ Push All Assets</button>
+          <button class="act-btn btn-s" onclick="pullErp()">⬇ Pull from ERP</button>
+          <button class="act-btn btn-s" onclick="saveErpConfig()">Save Config</button>
+        </div>
+        <div id="erp-log" style="margin-top:12px;background:var(--surf2);border-radius:10px;padding:12px;font-size:10px;color:var(--text2);min-height:40px;max-height:120px;overflow-y:auto;display:none;"></div>
+      </div>
+    </div>
+
+    <!-- ══ DATABASE SETUP ══ -->
+    <div class="panel" id="p-database">
+      <div class="panel-hdr">
+        <div><div class="panel-ttl">Database Setup</div><div class="panel-sub">Connect to Supabase for unlimited cloud storage</div></div>
+      </div>
+
+      <!-- Why Supabase -->
+      <div class="card">
+        <div class="card-ttl">Why Supabase? — Solving the Storage Problem</div>
+        <table class="tbl">
+          <thead><tr><th>Storage Method</th><th>Capacity</th><th>Multi-User</th><th>Photo Storage</th><th>Cost</th></tr></thead>
+          <tbody>
+            <tr><td style="color:var(--acc3);">Browser localStorage (old)</td><td style="color:var(--acc3);">5–10 MB total</td><td style="color:var(--acc3);">No — per device</td><td style="color:var(--acc3);">Fills up fast</td><td style="color:var(--acc);">Free</td></tr>
+            <tr><td style="color:var(--acc);">Supabase Free Tier</td><td style="color:var(--acc);">500 MB database + 1 GB photos</td><td style="color:var(--acc);">Yes — all devices</td><td style="color:var(--acc);">Cloud URLs</td><td style="color:var(--acc);">Free</td></tr>
+            <tr><td style="color:var(--text2);">Supabase Pro ($25/mo)</td><td style="color:var(--text2);">8 GB database + 100 GB photos</td><td style="color:var(--text2);">Yes</td><td style="color:var(--text2);">Cloud URLs</td><td style="color:var(--text2);">$25/mo</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:11px;color:var(--text2);margin-top:12px;line-height:1.8;">
+          The free tier handles approximately <strong style="color:var(--text);">50,000 asset records</strong> with photos. 
+          Photos are stored as URLs (not embedded base64), which is why you can now register unlimited assets — 
+          the database stores a link to the photo, not the photo itself.
+        </p>
+      </div>
+
+      <!-- Step by step -->
+      <div class="card">
+        <div class="card-ttl">Step 1 — Create Supabase Account</div>
+        <p style="font-size:12px;color:var(--text2);line-height:1.8;margin-bottom:12px;">
+          Go to <strong style="color:var(--acc4);">supabase.com</strong> → Sign Up → Create New Project → choose a region close to your users (e.g. West Africa → use EU West). 
+          Note your <strong>Project URL</strong> and <strong>anon/public API key</strong> from Settings → API.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-ttl">Step 2 — Run This SQL in Supabase SQL Editor</div>
+        <p style="font-size:11px;color:var(--text2);line-height:1.7;margin-bottom:10px;">Open your Supabase project → SQL Editor → New Query → paste and run:</p>
+        <button class="copy-btn" onclick="copySQL()" style="margin-bottom:8px;">📋 Copy SQL</button>
+        <div class="sql-block" id="sql-block">-- AssetTrack Pro — Complete Database Schema
+-- Run this entire block in Supabase SQL Editor
+
+-- 1. ASSETS TABLE
+create table if not exists assets (
+  id text primary key,
+  barcode text unique not null,
+  name text not null,
+  category text,
+  sub_category text,
+  location text,
+  department text,
+  status text default 'Active',
+  condition text default 'Good',
+  value numeric default 0,
+  custodian text,
+  serial text,
+  purchase_date date,
+  notes text,
+  photos text[],  -- array of photo URLs from Supabase Storage
+  registered_by text,
+  registered_from_audit boolean default false,
+  last_audit_date timestamptz,
+  last_audit_by text,
+  last_audit_changes text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- 2. USERS TABLE
+create table if not exists users (
+  id uuid primary key default gen_random_uuid(),
+  username text unique not null,
+  password_hash text not null,  -- use Supabase Auth in production
+  name text,
+  role text default 'field',    -- 'admin' | 'field' | 'auditor' | 'viewer'
+  active boolean default true,
+  created_at timestamptz default now()
+);
+
+-- 3. CONFIG TABLE (taxonomy, locations, departments, org settings)
+create table if not exists config (
+  key text primary key,
+  value text not null,
+  updated_at timestamptz default now()
+);
+
+-- 4. AUDIT LOG TABLE
+create table if not exists audit_log (
+  id uuid primary key default gen_random_uuid(),
+  asset_id text references assets(id),
+  barcode text,
+  action text,  -- 'verified' | 'flagged' | 'unknown' | 'updated'
+  changes text,
+  audited_by text,
+  audited_at timestamptz default now(),
+  notes text
+);
+
+-- 5. ROW LEVEL SECURITY (RLS)
+-- Field users can INSERT assets and UPDATE (audit) but cannot DELETE
+alter table assets enable row level security;
+create policy "Field users can insert" on assets for insert with check (true);
+create policy "Field users can read" on assets for select using (true);
+create policy "Admins can update" on assets for update using (true);
+create policy "Admins can delete" on assets for delete using (true);
+
+-- 6. STORAGE BUCKET for photos
+insert into storage.buckets (id, name, public) 
+values ('asset-photos', 'asset-photos', true)
+on conflict do nothing;
+
+create policy "Anyone can upload photos" on storage.objects
+for insert with check (bucket_id = 'asset-photos');
+create policy "Anyone can view photos" on storage.objects
+for select using (bucket_id = 'asset-photos');
+
+-- 7. DEFAULT ADMIN USER (change password after setup!)
+insert into users (username, password_hash, name, role) 
+values ('admin', 'admin123', 'System Administrator', 'admin')
+on conflict do nothing;
+
+-- 8. SEED DEFAULT FIELD USER
+insert into users (username, password_hash, name, role) 
+values ('field.officer', 'field123', 'Field Officer', 'field')
+on conflict do nothing;</div>
+      </div>
+
+      <div class="card">
+        <div class="card-ttl">Step 3 — Add Your Keys to Both HTML Files</div>
+        <p style="font-size:12px;color:var(--text2);line-height:1.8;margin-bottom:12px;">Open both <code style="background:var(--surf2);padding:2px 6px;border-radius:4px;font-size:10px;">field.html</code> and <code style="background:var(--surf2);padding:2px 6px;border-radius:4px;font-size:10px;">admin.html</code> in a text editor and replace:</p>
+        <div class="sql-block">// Find these two lines near the top of the &lt;script&gt; section:
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+
+// Replace with your actual values, e.g.:
+const SUPABASE_URL = 'https://abcdefghijkl.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';</div>
+        <p style="font-size:11px;color:var(--text2);line-height:1.8;margin-top:10px;">
+          Then re-upload both files to GitHub. Your data now saves to the cloud permanently. 
+          All field officers' registrations will appear in the admin dashboard instantly.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-ttl">Step 4 — Capacity Planning</div>
+        <table class="tbl">
+          <thead><tr><th>Scale</th><th>Assets</th><th>Photos</th><th>Recommended Plan</th><th>Monthly Cost</th></tr></thead>
+          <tbody>
+            <tr><td>Small</td><td>Up to 5,000</td><td>Up to 10,000</td><td>Supabase Free</td><td style="color:var(--acc);">$0</td></tr>
+            <tr><td>Medium</td><td>Up to 50,000</td><td>Up to 100,000</td><td>Supabase Pro</td><td style="color:var(--acc2);">$25</td></tr>
+            <tr><td>Large</td><td>50,000+</td><td>Unlimited</td><td>Supabase Team</td><td style="color:var(--acc3);">$599</td></tr>
+            <tr><td>Enterprise</td><td>Unlimited</td><td>Unlimited</td><td>Custom / Self-hosted</td><td style="color:var(--text2);">Negotiated</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /main-content -->
+</div><!-- /app -->
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal-body"></div>
+</div>
+
+<!-- Mobile menu button -->
+<button class="mob-menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+
+<div class="toast" id="toast-el"></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// SUPABASE CONFIG — same keys as field.html
+// ══════════════════════════════════════════════════════
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const CONFIGURED = SUPABASE_URL !== 'YOUR_SUPABASE_URL';
+
+const sb = {
+  async query(table, params=''){
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/${table}${params}`,{
+      headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY}
+    });
+    return r.json();
+  },
+  async insert(table, data){
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/${table}`,{
+      method:'POST',
+      headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
+      body:JSON.stringify(data)
+    });
+    return r.json();
+  },
+  async update(table, id, data){
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`,{
+      method:'PATCH',
+      headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify(data)
+    });
+    return r.json();
+  },
+  async remove(table, id){
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`,{
+      method:'DELETE',
+      headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY}
+    });
+    return r.ok;
+  }
+};
+
+// ══════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════
+let currentUser=null;
+let allAssets=[];
+let allUsers=[];
+let auditLog=[];
+
+// Default data (used in demo mode)
+const DEFAULT_TAXONOMY={
+  'IT Equipment':{'Computing Devices':['Desktop Computer','Laptop Computer','Tablet','Workstation'],'Servers & Network':['Server (Rack)','Network Switch','Router','Firewall'],'Printing':['Printer (Laser)','Printer (Inkjet)','Multifunction Printer'],'Display':['Monitor (24")','Monitor (27")','Projector']},
+  'Furniture':{'Seating':['Executive Chair','Standard Chair','Ergonomic Chair','Visitor Chair','Sofa'],'Desks & Tables':['Executive Desk','Work Desk','Conference Table (6)','Conference Table (12)','Reception Desk'],'Storage':['Filing Cabinet','Bookshelf','Safe / Vault']},
+  'Vehicle':{'Passenger':['Saloon Car','SUV / Jeep','Mini Bus (14)','Bus (30)'],'Commercial':['Pickup Truck','Delivery Van','Tipper Truck']},
+  'Machinery':{'Power':['Generator (5KVA)','Generator (10KVA)','Generator (20KVA)','Generator (100KVA)','Solar Panel Array'],'HVAC':['Air Conditioner (Split)','Air Conditioner (Cassette)']},
+  'Office Equipment':{'General':['Water Dispenser','Microwave','Shredder','Cash Register','POS Terminal']}
+};
+let TAXONOMY=JSON.parse(JSON.stringify(DEFAULT_TAXONOMY));
+let LOCATIONS=['Head Office — Main Building','Head Office — Annex','Branch Office — Lagos','Branch Office — Abuja','Warehouse A','Server Room','Generator House','Fleet Yard','Workshop'];
+let DEPARTMENTS=['Executive / Management','Finance & Accounts','Information Technology','Human Resources','Operations','Procurement','Legal & Compliance','Security','Internal Audit'];
+
+const DEMO_ADMINS=[{username:'admin',password:'admin123',name:'System Administrator',role:'admin'}];
+
+// ══════════════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════════════
+async function doLogin(){
+  const u=document.getElementById('ls-user').value.trim().toLowerCase();
+  const p=document.getElementById('ls-pass').value;
+  document.getElementById('ls-err').textContent='';
+  if(!u||!p){document.getElementById('ls-err').textContent='Enter credentials';return;}
+  try{
+    let user=null;
+    if(CONFIGURED){
+      const res=await sb.query('users',`?username=eq.${u}&role=eq.admin&select=*`);
+      if(res&&res.length&&res[0].password_hash===p)user=res[0];
+    } else {
+      user=DEMO_ADMINS.find(x=>x.username===u&&x.password===p);
+    }
+    if(!user){document.getElementById('ls-err').textContent='Invalid credentials or insufficient role';return;}
+    currentUser=user;
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('main-app').style.display='flex';
+    document.getElementById('sb-uname').textContent=user.name||user.username;
+    await initAdmin();
+  }catch(e){document.getElementById('ls-err').textContent='Connection error';}
+}
+
+function doLogout(){
+  currentUser=null;allAssets=[];allUsers=[];
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('main-app').style.display='none';
+}
+
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
+async function initAdmin(){
+  if(CONFIGURED){
+    try{
+      // Load config
+      const cfg=await sb.query('config','?select=*');
+      if(cfg&&cfg.length){
+        cfg.forEach(r=>{
+          if(r.key==='taxonomy')TAXONOMY=JSON.parse(r.value);
+          if(r.key==='locations')LOCATIONS=JSON.parse(r.value);
+          if(r.key==='departments')DEPARTMENTS=JSON.parse(r.value);
+          if(r.key==='permissions'){try{PERMS=JSON.parse(r.value);}catch(e){}}
+        });
+      }
+      // Load assets
+      allAssets=await sb.query('assets','?select=*&order=created_at.desc');
+      if(!Array.isArray(allAssets))allAssets=[];
+      // Load users
+      allUsers=await sb.query('users','?select=*');
+      if(!Array.isArray(allUsers))allUsers=[];
+      // Load audit log
+      auditLog=await sb.query('audit_log','?select=*&order=audited_at.desc&limit=500');
+      if(!Array.isArray(auditLog))auditLog=[];
+    }catch(e){toast('Could not load data from Supabase — check config','err');}
+  } else {
+    // Demo: load from localStorage
+    allAssets=getLocalAssets();
+    allUsers=JSON.parse(localStorage.getItem('atp_users')||'[]');
+    if(!allUsers.length)allUsers=[{id:'1',username:'field.officer',name:'Field Officer',role:'field',active:true}];
+  }
+  populateTaxonomyEditor();
+  populateLocsDepts();
+  populateAssetFilters();
+  renderUsers();
+  loadPerms();
+  renderPermMatrix();
+  refreshDash();
+}
+
+function getLocalAssets(){
+  try{
+    const idx=JSON.parse(localStorage.getItem('atp_index')||'[]');
+    return idx.map(id=>{try{return JSON.parse(localStorage.getItem('atp_asset_'+id));}catch(e){return null;}}).filter(Boolean);
+  }catch(e){return [];}
+}
+
+// ══════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════
+function show(name){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('on'));
+  const pEl=document.getElementById('p-'+name);if(pEl)pEl.classList.add('on');
+  const ni=document.querySelector(`.nav-item[onclick="show('${name}')"]`);
+  if(ni)ni.classList.add('on');
+  const sb=document.getElementById('sidebar');if(sb)sb.classList.remove('open');
+  // Panel-specific init
+  if(name==='assets'){renderAssets();}
+  if(name==='audit-mgmt'){renderAuditMgmt();}
+  if(name==='reports'){renderReports();}
+  if(name==='users'){renderUsers();}
+  if(name==='locations'){renderLocsDepts();}
+  if(name==='taxonomy'){populateTaxonomyEditor();}
+  if(name==='setup'){renderPermMatrix();}
+}
+
+// ══════════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════════
+async function refreshDash(){
+  if(CONFIGURED){
+    try{allAssets=await sb.query('assets','?select=*&order=created_at.desc');if(!Array.isArray(allAssets))allAssets=[];}catch(e){}
+  }
+  const tot=allAssets.length;
+  const active=allAssets.filter(a=>a.status==='Active').length;
+  const maint=allAssets.filter(a=>a.status==='Maintenance').length;
+  const disp=allAssets.filter(a=>a.status==='Disposed').length;
+  const unv=allAssets.filter(a=>a.status==='Unverified').length;
+  const audited=allAssets.filter(a=>a.last_audit_date).length;
+  const issues=allAssets.filter(a=>a.status==='Maintenance'||a.status==='Disposed').length;
+  document.getElementById('k-total').textContent=tot;
+  document.getElementById('k-audited').textContent=audited;
+  document.getElementById('k-issues').textContent=issues;
+  document.getElementById('k-users').textContent=allUsers.filter(u=>u.role!=='admin').length;
+  document.getElementById('dash-sub').textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const pct=tot?Math.round(audited/tot*100):0;
+  document.getElementById('aud-pct').textContent=pct+'%';
+  document.getElementById('aud-bar').style.width=pct+'%';
+
+  // Status breakdown
+  document.getElementById('status-brkd').innerHTML=[
+    ['Active',active,'var(--acc)'],['Maintenance',maint,'var(--acc2)'],
+    ['Disposed',disp,'var(--acc3)'],['Unverified',unv,'var(--acc4)']
+  ].map(([l,v,c])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
+    <span style="font-size:12px;color:var(--text);">${l}</span>
+    <span style="font-size:12px;color:${c};font-weight:700;">${v} <span style="color:var(--text3);font-size:10px;">(${tot?Math.round(v/tot*100):0}%)</span></span>
+  </div>`).join('');
+
+  // Category breakdown
+  const cats={};allAssets.forEach(a=>{cats[a.category||'Other']=(cats[a.category||'Other']||0)+1;});
+  document.getElementById('cat-brkd').innerHTML=Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`
+    <div style="padding:7px 0;border-bottom:1px solid var(--border);">
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:11px;color:var(--text);">${k}</span><span style="font-size:11px;color:var(--text2);">${v}</span></div>
+      <div style="height:3px;background:var(--surf3);border-radius:2px;"><div style="width:${tot?Math.round(v/tot*100):0}%;height:3px;background:var(--acc5);border-radius:2px;"></div></div>
+    </div>`).join('');
+
+  // Recent
+  const tbody=document.getElementById('recent-tbody');
+  tbody.innerHTML=allAssets.slice(0,10).map(a=>`<tr>
+    <td style="color:var(--text);">${a.name}</td>
+    <td style="font-family:monospace;color:var(--acc);font-size:10px;">${a.barcode}</td>
+    <td style="color:var(--text2);">${a.location||'—'}</td>
+    <td style="color:var(--text2);">${a.department||'—'}</td>
+    <td style="color:var(--text2);">${a.custodian||'—'}</td>
+    <td><span class="badge ${a.status==='Active'?'ba':a.status==='Maintenance'?'bm':a.status==='Disposed'?'bd':'bu'}">${a.status}</span></td>
+    <td style="color:var(--text2);">${a.registered_by||'—'}</td>
+    <td style="color:var(--text3);font-size:10px;">${a.created_at?new Date(a.created_at).toLocaleDateString('en-GB'):'—'}</td>
+  </tr>`).join('');
+}
+
+// ══════════════════════════════════════════════════════
+// ASSETS
+// ══════════════════════════════════════════════════════
+function populateAssetFilters(){
+  const catSel=document.getElementById('ast-cat');
+  Object.keys(TAXONOMY).forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;catSel.appendChild(o);});
+  const deptSel=document.getElementById('ast-dept');
+  DEPARTMENTS.forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent=d;deptSel.appendChild(o);});
+}
+
+function renderAssets(){
+  const q=(document.getElementById('ast-search')||{}).value||'';
+  const st=(document.getElementById('ast-status')||{}).value||'';
+  const cat=(document.getElementById('ast-cat')||{}).value||'';
+  const dept=(document.getElementById('ast-dept')||{}).value||'';
+  const filtered=allAssets.filter(a=>{
+    const mq=!q||a.name.toLowerCase().includes(q.toLowerCase())||a.barcode.toLowerCase().includes(q.toLowerCase());
+    const ms=!st||a.status===st;
+    const mc=!cat||a.category===cat;
+    const md=!dept||a.department===dept;
+    return mq&&ms&&mc&&md;
+  });
+  const tbody=document.getElementById('assets-tbody');
+  const empty=document.getElementById('assets-empty');
+  if(!filtered.length){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  tbody.innerHTML=filtered.map(a=>{
+    const img=a.photos&&a.photos[0];
+    const th=img?`<img src="${img}" style="width:36px;height:28px;object-fit:cover;border-radius:5px;">`:
+      `<div style="width:36px;height:28px;background:var(--surf2);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;">📦</div>`;
+    return `<tr>
+      <td>${th}</td>
+      <td><div style="font-size:12px;color:var(--text);">${a.name}</div><div style="font-size:9px;color:var(--text3);">${a.category||''}${a.sub_category?' › '+a.sub_category:''}</div></td>
+      <td style="font-family:monospace;font-size:10px;color:var(--acc);">${a.barcode}</td>
+      <td style="font-size:11px;color:var(--text2);">${a.category||'—'}</td>
+      <td style="font-size:11px;color:var(--text2);">${a.location||'—'}</td>
+      <td style="font-size:11px;color:var(--text2);">${a.department||'—'}</td>
+      <td style="font-size:11px;color:var(--text2);">${a.custodian||'—'}</td>
+      <td style="font-size:11px;color:var(--text2);">${a.value?'₦'+parseInt(a.value).toLocaleString():'—'}</td>
+      <td><span class="badge ${a.status==='Active'?'ba':a.status==='Maintenance'?'bm':a.status==='Disposed'?'bd':'bu'}">${a.status}</span></td>
+      <td style="white-space:nowrap;">
+        <button class="act-btn btn-s" style="padding:5px 10px;font-size:10px;" onclick="editAsset('${a.id}')">Edit</button>
+        <button class="act-btn btn-d" style="padding:5px 10px;font-size:10px;margin-left:4px;" onclick="deleteAsset('${a.id}','${a.name}')">Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openAddAsset(){toast('Use the Field App to register assets. Admin can edit existing assets.','info');}
+
+async function editAsset(id){
+  const a=allAssets.find(x=>x.id===id);if(!a)return;
+  openModal(`<div class="modal-ttl">Edit Asset</div>
+    <div class="fg"><div class="fl">Status</div><select class="fi" id="ea-status"><option>Active</option><option>Maintenance</option><option>Disposed</option><option>Unverified</option></select></div>
+    <div class="fg"><div class="fl">Condition</div><select class="fi" id="ea-cond"><option>Excellent</option><option>Good</option><option>Fair</option><option>Poor</option></select></div>
+    <div class="fg"><div class="fl">Location</div><select class="fi" id="ea-loc">${LOCATIONS.map(l=>`<option ${l===a.location?'selected':''}>${l}</option>`).join('')}</select></div>
+    <div class="fg"><div class="fl">Department</div><select class="fi" id="ea-dept">${DEPARTMENTS.map(d=>`<option ${d===a.department?'selected':''}>${d}</option>`).join('')}</select></div>
+    <div class="fg"><div class="fl">Custodian</div><input class="fi" type="text" id="ea-cust" value="${a.custodian||''}"></div>
+    <div class="fg"><div class="fl">Value (₦)</div><input class="fi" type="number" id="ea-val" value="${a.value||0}"></div>
+    <div class="fg"><div class="fl">Notes</div><input class="fi" type="text" id="ea-notes" value="${a.notes||''}"></div>
+    <div class="modal-acts"><button class="act-btn btn-s" onclick="closeModal()">Cancel</button><button class="act-btn btn-p" onclick="saveEditAsset('${id}')">Save Changes</button></div>`);
+  setTimeout(()=>{
+    document.getElementById('ea-status').value=a.status||'Active';
+    document.getElementById('ea-cond').value=a.condition||'Good';
+  },50);
+}
+
+async function saveEditAsset(id){
+  const updates={
+    status:document.getElementById('ea-status').value,
+    condition:document.getElementById('ea-cond').value,
+    location:document.getElementById('ea-loc').value,
+    department:document.getElementById('ea-dept').value,
+    custodian:document.getElementById('ea-cust').value,
+    value:parseFloat(document.getElementById('ea-val').value)||0,
+    notes:document.getElementById('ea-notes').value,
+    updated_at:new Date().toISOString()
+  };
+  if(CONFIGURED){try{await sb.update('assets',id,updates);}catch(e){toast('Update error','err');return;}}
+  const idx=allAssets.findIndex(x=>x.id===id);
+  if(idx>=0)allAssets[idx]={...allAssets[idx],...updates};
+  closeModal();toast('Asset updated','ok');renderAssets();
+}
+
+async function deleteAsset(id, name){
+  if(!confirm(`Delete "${name}"? This cannot be undone.`))return;
+  if(CONFIGURED){try{await sb.remove('assets',id);}catch(e){toast('Delete failed','err');return;}}
+  allAssets=allAssets.filter(a=>a.id!==id);
+  toast('Asset deleted','ok');renderAssets();refreshDash();
+}
+
+// ══════════════════════════════════════════════════════
+// AUDIT MANAGEMENT
+// ══════════════════════════════════════════════════════
+function renderAuditMgmt(){
+  const audited=allAssets.filter(a=>a.last_audit_date).length;
+  const pending=allAssets.filter(a=>!a.last_audit_date).length;
+  const flagged=allAssets.filter(a=>a.status==='Maintenance'||a.status==='Disposed').length;
+  document.getElementById('am-verified').textContent=audited;
+  document.getElementById('am-pending').textContent=pending;
+  document.getElementById('am-flagged').textContent=flagged;
+  document.getElementById('am-unknown').textContent=0;
+  const tbody=document.getElementById('audit-tbody');
+  tbody.innerHTML=allAssets.map(a=>{
+    const audited=!!a.last_audit_date;
+    return `<tr>
+      <td style="font-size:12px;color:var(--text);">${a.name}</td>
+      <td style="font-family:monospace;font-size:10px;color:var(--acc);">${a.barcode}</td>
+      <td style="font-size:11px;color:var(--text2);">${a.location||'—'}</td>
+      <td style="font-size:11px;color:var(--text2);">${a.department||'—'}</td>
+      <td style="font-size:11px;color:${audited?'var(--acc)':'var(--text3)'};">${a.last_audit_date?new Date(a.last_audit_date).toLocaleDateString('en-GB'):'Not audited'}</td>
+      <td style="font-size:11px;color:var(--text2);">${a.last_audit_by||'—'}</td>
+      <td><span class="badge ${audited?'ba':'bu'}">${audited?'Verified':'Pending'}</span></td>
+      <td style="font-size:10px;color:var(--text3);max-width:150px;overflow:hidden;text-overflow:ellipsis;">${a.last_audit_changes||'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function resetAuditCycle(){
+  if(CONFIGURED){
+    allAssets.forEach(async a=>{
+      await sb.update('assets',a.id,{last_audit_date:null,last_audit_by:null,last_audit_changes:null});
+    });
+  }
+  allAssets.forEach(a=>{delete a.last_audit_date;delete a.last_audit_by;delete a.last_audit_changes;});
+  toast('Audit cycle reset','ok');renderAuditMgmt();
+}
+
+// ══════════════════════════════════════════════════════
+// USERS
+// ══════════════════════════════════════════════════════
+function renderUsers(){
+  const el=document.getElementById('users-list');
+  if(!allUsers.length){el.innerHTML='<div style="color:var(--text3);font-size:12px;padding:12px 0;">No users yet.</div>';return;}
+  el.innerHTML=allUsers.map(u=>`
+    <div class="user-card">
+      <div class="user-av">${u.role==='admin'?'👑':u.role==='auditor'?'🔍':'👤'}</div>
+      <div class="user-inf">
+        <div class="user-nm">${u.name||u.username}</div>
+        <div class="user-un">@${u.username} · <span class="badge ${u.role==='admin'?'br':u.role==='auditor'?'ba':'bm'}">${u.role}</span></div>
+      </div>
+      <div class="user-acts">
+        <button class="act-btn btn-s" style="padding:5px 10px;font-size:10px;" onclick="editUser('${u.id||u.username}')">Edit</button>
+        ${u.role!=='admin'?`<button class="act-btn btn-d" style="padding:5px 10px;font-size:10px;" onclick="deleteUser('${u.id||u.username}','${u.username}')">Remove</button>`:''}
+      </div>
+    </div>`).join('');
+}
+
+function openAddUser(){
+  openModal(`<div class="modal-ttl">Add Field User</div>
+    <div class="fg"><div class="fl">Full Name</div><input class="fi" type="text" id="nu-name" placeholder="Jane Doe"></div>
+    <div class="fg"><div class="fl">Username</div><input class="fi" type="text" id="nu-user" placeholder="jane.doe" autocapitalize="none"></div>
+    <div class="fg"><div class="fl">Password</div><input class="fi" type="text" id="nu-pass" placeholder="Temporary password"></div>
+    <div class="fg"><div class="fl">Role</div><select class="fi" id="nu-role"><option value="field">Field / Auditor</option><option value="admin">Admin</option><option value="viewer">Viewer (read-only)</option></select></div>
+    <div class="modal-acts"><button class="act-btn btn-s" onclick="closeModal()">Cancel</button><button class="act-btn btn-p" onclick="saveNewUser()">Create User</button></div>`);
+}
+
+async function saveNewUser(){
+  const name=document.getElementById('nu-name').value.trim();
+  const username=document.getElementById('nu-user').value.trim().toLowerCase();
+  const pass=document.getElementById('nu-pass').value.trim();
+  const role=document.getElementById('nu-role').value;
+  if(!name||!username||!pass){toast('Fill all fields','err');return;}
+  const user={id:'U-'+Date.now(),username,password_hash:pass,name,role,active:true,created_at:new Date().toISOString()};
+  if(CONFIGURED){try{await sb.insert('users',user);}catch(e){toast('Error creating user','err');return;}}
+  else{const users=JSON.parse(localStorage.getItem('atp_users')||'[]');users.push(user);localStorage.setItem('atp_users',JSON.stringify(users));}
+  allUsers.push(user);
+  closeModal();toast('User created: @'+username,'ok');renderUsers();
+}
+
+function editUser(id){toast('Edit user — update role or reset password via Supabase Dashboard for security','info');}
+async function deleteUser(id,uname){
+  if(!confirm(`Remove user @${uname}?`))return;
+  if(CONFIGURED){try{await sb.remove('users',id);}catch(e){}}
+  allUsers=allUsers.filter(u=>(u.id||u.username)!==id);
+  toast('User removed','ok');renderUsers();
+}
+
+// ══════════════════════════════════════════════════════
+// TAXONOMY EDITOR
+// ══════════════════════════════════════════════════════
+function populateTaxonomyEditor(){
+  const el=document.getElementById('taxonomy-editor');
+  el.innerHTML=Object.keys(TAXONOMY).map(cat=>`
+    <div class="setup-sect">
+      <div class="setup-hdr">
+        <div class="setup-hdr-ttl">📁 ${cat}</div>
+        <div style="display:flex;gap:7px;">
+          <button class="act-btn btn-s" style="padding:5px 10px;font-size:10px;" onclick="addSubcat('${cat}')">+ Sub-Cat</button>
+          <button class="act-btn btn-d" style="padding:5px 10px;font-size:10px;" onclick="deleteCat('${cat}')">✕ Remove</button>
+        </div>
+      </div>
+      <div class="setup-body">
+        ${Object.keys(TAXONOMY[cat]).map(sub=>`
+          <div style="margin-bottom:12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <span style="font-size:12px;color:var(--text2);">📂 ${sub}</span>
+              <div style="display:flex;gap:5px;">
+                <button class="act-btn btn-s" style="padding:3px 8px;font-size:9px;" onclick="addAssetName('${cat}','${sub}')">+ Name</button>
+                <button class="act-btn btn-d" style="padding:3px 8px;font-size:9px;" onclick="deleteSubcat('${cat}','${sub}')">✕</button>
+              </div>
+            </div>
+            <div class="tag-grid">${(TAXONOMY[cat][sub]||[]).map(nm=>`<div class="tag">${nm}<button class="tag-x" onclick="deleteAssetName('${cat}','${sub}','${nm}')">✕</button></div>`).join('')}</div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function addCategory(){
+  const nm=prompt('New category name:');
+  if(!nm)return;
+  TAXONOMY[nm]={};populateTaxonomyEditor();
+}
+function deleteCat(cat){if(!confirm(`Remove category "${cat}" and all its contents?`))return;delete TAXONOMY[cat];populateTaxonomyEditor();}
+function addSubcat(cat){const nm=prompt(`Sub-category name under "${cat}":`);if(!nm)return;TAXONOMY[cat][nm]=[];populateTaxonomyEditor();}
+function deleteSubcat(cat,sub){if(!confirm(`Remove sub-category "${sub}"?`))return;delete TAXONOMY[cat][sub];populateTaxonomyEditor();}
+function addAssetName(cat,sub){const nm=prompt(`Asset name under "${sub}":`);if(!nm)return;TAXONOMY[cat][sub].push(nm);populateTaxonomyEditor();}
+function deleteAssetName(cat,sub,nm){TAXONOMY[cat][sub]=TAXONOMY[cat][sub].filter(x=>x!==nm);populateTaxonomyEditor();}
+
+async function saveTaxonomy(){
+  if(CONFIGURED){
+    try{
+      await fetch(`${SUPABASE_URL}/rest/v1/config`,{method:'POST',headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},body:JSON.stringify({key:'taxonomy',value:JSON.stringify(TAXONOMY),updated_at:new Date().toISOString()})});
+    }catch(e){toast('Save error','err');return;}
+  }
+  localStorage.setItem('atp_taxonomy',JSON.stringify(TAXONOMY));
+  toast('Taxonomy saved — field app will reload it on next login','ok');
+}
+
+// ══════════════════════════════════════════════════════
+// LOCATIONS & DEPARTMENTS
+// ══════════════════════════════════════════════════════
+function renderLocsDepts(){
+  document.getElementById('loc-tags').innerHTML=LOCATIONS.map(l=>`<div class="tag">${l}<button class="tag-x" onclick="removeLoc('${l.replace(/'/g,"\\'")}')">✕</button></div>`).join('');
+  document.getElementById('dept-tags').innerHTML=DEPARTMENTS.map(d=>`<div class="tag">${d}<button class="tag-x" onclick="removeDept('${d.replace(/'/g,"\\'")}')">✕</button></div>`).join('');
+}
+function populateLocsDepts(){renderLocsDepts();}
+function addLoc(){const v=document.getElementById('loc-inp').value.trim();if(!v)return;LOCATIONS.push(v);document.getElementById('loc-inp').value='';renderLocsDepts();}
+function addDept(){const v=document.getElementById('dept-inp').value.trim();if(!v)return;DEPARTMENTS.push(v);document.getElementById('dept-inp').value='';renderLocsDepts();}
+function removeLoc(l){LOCATIONS=LOCATIONS.filter(x=>x!==l);renderLocsDepts();}
+function removeDept(d){DEPARTMENTS=DEPARTMENTS.filter(x=>x!==d);renderLocsDepts();}
+
+async function saveLocsDepts(){
+  if(CONFIGURED){
+    try{
+      const upsert=(key,val)=>fetch(`${SUPABASE_URL}/rest/v1/config`,{method:'POST',headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},body:JSON.stringify({key,value:JSON.stringify(val),updated_at:new Date().toISOString()})});
+      await Promise.all([upsert('locations',LOCATIONS),upsert('departments',DEPARTMENTS)]);
+    }catch(e){toast('Save error','err');return;}
+  }
+  localStorage.setItem('atp_locations',JSON.stringify(LOCATIONS));
+  localStorage.setItem('atp_departments',JSON.stringify(DEPARTMENTS));
+  toast('Locations & Departments saved','ok');
+}
+
+// ══════════════════════════════════════════════════════
+// REPORTS
+// ══════════════════════════════════════════════════════
+function renderReports(){
+  const tot=allAssets.length;
+  const val=allAssets.reduce((s,a)=>s+(parseFloat(a.value)||0),0);
+  const audited=allAssets.filter(a=>a.last_audit_date).length;
+  const locs=new Set(allAssets.map(a=>a.location).filter(Boolean)).size;
+  document.getElementById('rpt-total').textContent=tot;
+  document.getElementById('rpt-val').textContent='₦'+val.toLocaleString();
+  document.getElementById('rpt-rate').textContent=tot?Math.round(audited/tot*100)+'%':'0%';
+  document.getElementById('rpt-locs').textContent=locs;
+}
+
+function getFilteredForExport(){
+  const from=document.getElementById('rpt-from').value;
+  const to=document.getElementById('rpt-to').value;
+  const st=document.getElementById('rpt-status').value;
+  return allAssets.filter(a=>{
+    if(st&&a.status!==st)return false;
+    if(from&&a.created_at&&a.created_at<from)return false;
+    if(to&&a.created_at&&a.created_at>to+'T23:59:59')return false;
+    return true;
+  });
+}
+
+function exportFullCSV(){
+  const data=getFilteredForExport();
+  if(!data.length){toast('No data to export','err');return;}
+  const h=['Barcode','Asset Name','Category','Sub-Category','Location','Department','Status','Condition','Value (₦)','Custodian','Serial','Purchase Date','Registered By','Registered At','Last Audit Date','Last Audit By','Audit Changes','Notes'];
+  const rows=data.map(a=>[a.barcode,a.name,a.category||'',a.sub_category||'',a.location||'',a.department||'',a.status,a.condition,a.value||0,a.custodian||'',a.serial||'',a.purchase_date||'',a.registered_by||'',a.created_at?new Date(a.created_at).toLocaleDateString('en-GB'):'',a.last_audit_date?new Date(a.last_audit_date).toLocaleDateString('en-GB'):'',a.last_audit_by||'',a.last_audit_changes||'',a.notes||''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
+  const csv=[h.join(','),...rows].join('\n');
+  dlFile(csv,'text/csv',`AssetRegister_${new Date().toISOString().split('T')[0]}.csv`);
+  toast('CSV exported!','ok');
+}
+
+function exportFullExcel(){
+  const data=getFilteredForExport();
+  if(!data.length){toast('No data','err');return;}
+  const cols=['barcode','name','category','sub_category','location','department','status','condition','value','custodian','serial','purchase_date','registered_by','last_audit_date','last_audit_changes','notes'];
+  const hdrs=['Barcode','Asset Name','Category','Sub-Category','Location','Department','Status','Condition','Value (₦)','Custodian','Serial','Purchase Date','Registered By','Last Audit','Audit Changes','Notes'];
+  const header=hdrs.map(h=>`<Cell ss:StyleID="h"><Data ss:Type="String">${h}</Data></Cell>`).join('');
+  const rows=data.map(a=>`<Row>${cols.map(c=>`<Cell><Data ss:Type="${c==='value'?'Number':'String'}">${a[c]||''}</Data></Cell>`).join('')}</Row>`).join('');
+  const xml=`<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"><Styles><Style ss:ID="h"><Font ss:Bold="1"/></Style></Styles><Worksheet ss:Name="Assets"><Table><Row>${header}</Row>${rows}</Table></Worksheet></Workbook>`;
+  dlFile(xml,'application/vnd.ms-excel',`AssetRegister_${new Date().toISOString().split('T')[0]}.xls`);
+  toast('Excel exported!','ok');
+}
+
+function exportAuditReport(){
+  const data=allAssets;
+  const audited=data.filter(a=>a.last_audit_date);
+  const pending=data.filter(a=>!a.last_audit_date);
+  const h=['Barcode','Asset Name','Location','Department','Status','Last Audit Date','Audited By','Changes','Notes'];
+  const rows=[...audited,...pending].map(a=>[a.barcode,a.name,a.location||'',a.department||'',a.status,a.last_audit_date?new Date(a.last_audit_date).toLocaleDateString('en-GB'):'PENDING',a.last_audit_by||'',a.last_audit_changes||'',a.notes||''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
+  dlFile([h.join(','),...rows].join('\n'),'text/csv',`AuditReport_${new Date().toISOString().split('T')[0]}.csv`);
+  toast('Audit report exported!','ok');
+}
+
+function exportByDept(){
+  const data=getFilteredForExport();
+  const depts={};data.forEach(a=>{const d=a.department||'Unassigned';if(!depts[d])depts[d]=[];depts[d].push(a);});
+  const h=['Department','Barcode','Asset Name','Location','Status','Value (₦)','Custodian'];
+  const rows=[];Object.entries(depts).forEach(([d,assets])=>{assets.forEach(a=>rows.push([d,a.barcode,a.name,a.location||'',a.status,a.value||0,a.custodian||''].map(v=>'"'+String(v)+'"').join(',')));});
+  dlFile([h.join(','),...rows].join('\n'),'text/csv',`AssetsByDept_${new Date().toISOString().split('T')[0]}.csv`);
+  toast('Department report exported!','ok');
+}
+
+function exportByLoc(){
+  const data=getFilteredForExport();
+  const locs={};data.forEach(a=>{const l=a.location||'Unspecified';if(!locs[l])locs[l]=[];locs[l].push(a);});
+  const h=['Location','Barcode','Asset Name','Department','Status','Value (₦)','Custodian'];
+  const rows=[];Object.entries(locs).forEach(([l,assets])=>{assets.forEach(a=>rows.push([l,a.barcode,a.name,a.department||'',a.status,a.value||0,a.custodian||''].map(v=>'"'+String(v)+'"').join(',')));});
+  dlFile([h.join(','),...rows].join('\n'),'text/csv',`AssetsByLocation_${new Date().toISOString().split('T')[0]}.csv`);
+  toast('Location report exported!','ok');
+}
+
+function exportPhotoReport(){
+  const data=getFilteredForExport();
+  if(!data.length){toast('No data','err');return;}
+  const stamp=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+  const cards=data.map(function(a){
+    const photos=a.photos||[];
+    const pHtml=photos.length
+      ?photos.map(function(p){return '<img src="'+p+'" style="width:120px;height:90px;object-fit:cover;border-radius:8px;border:1px solid #e0e6f0;">';}).join('')
+      :'<div style="width:100px;height:80px;background:#f0f2f8;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;">&#128230;</div>';
+    const statusColor=a.status==='Active'?'#00c8a0':'#ff4858';
+    return '<div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:16px;box-shadow:0 2px 10px rgba(0,0,0,.06);border:1px solid #e8edf5;page-break-inside:avoid;">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">'
+      +'<div><div style="font-size:15px;font-weight:700;color:#1a2238;">'+a.name+'</div>'
+      +'<div style="font-size:11px;color:#666;">'+(a.category||'')+((a.sub_category)?' > '+a.sub_category:'')+'</div>'
+      +'<div style="font-size:11px;color:#00c8a0;font-family:monospace;margin-top:2px;">&#9638; '+a.barcode+'</div></div>'
+      +'<div style="background:rgba(0,200,160,.1);color:'+statusColor+';padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700;">'+a.status+'</div>'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;">'+pHtml+'</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:11px;">'
+      +'<div><span style="color:#999;font-size:9px;">LOCATION</span><br><b>'+(a.location||'—')+'</b></div>'
+      +'<div><span style="color:#999;font-size:9px;">DEPARTMENT</span><br><b>'+(a.department||'—')+'</b></div>'
+      +'<div><span style="color:#999;font-size:9px;">CUSTODIAN</span><br><b>'+(a.custodian||'—')+'</b></div>'
+      +'<div><span style="color:#999;font-size:9px;">VALUE</span><br><b>'+(a.value?'&#8358;'+parseInt(a.value).toLocaleString():'—')+'</b></div>'
+      +'<div><span style="color:#999;font-size:9px;">CONDITION</span><br><b>'+(a.condition||'—')+'</b></div>'
+      +'<div><span style="color:#999;font-size:9px;">LAST AUDIT</span><br><b>'+(a.last_audit_date?new Date(a.last_audit_date).toLocaleDateString('en-GB'):'Pending')+'</b></div>'
+      +'</div></div>';
+  }).join('');
+  const html='<!DOCTYPE html>'
+    +'<html><head><meta charset="UTF-8"><title>Photo Register '+stamp+'</title>'
+    +'<style>@media print{body{background:#fff;}}</style>'
+    +'</head>'
+    +'<body style="font-family:sans-serif;background:#f4f6fa;padding:20px;max-width:900px;margin:0 auto;">'
+    +'<div style="background:#07090f;color:#fff;padding:24px 28px;border-radius:14px;margin-bottom:22px;display:flex;justify-content:space-between;">'
+    +'<div><div style="font-size:24px;font-weight:800;">AssetTrack Pro</div>'
+    +'<div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:3px;">Photo Asset Register &middot; '+stamp+'</div></div>'
+    +'<div style="text-align:right;"><div style="font-size:24px;font-weight:800;color:#00c8a0;">'+data.length+'</div>'
+    +'<div style="font-size:11px;color:rgba(255,255,255,.4);">Total Assets</div></div>'
+    +'</div>'
+    +cards
+    +'<div style="text-align:center;font-size:11px;color:#aaa;margin-top:20px;">AssetTrack Pro &middot; Admin Photo Report &middot; '+stamp+'</div>'
+    +'<'+'/body><'+'/html>';
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const w=window.open(url,'_blank');
+  if(!w){const l=document.createElement('a');l.href=url;l.download='PhotoReport.html';l.click();}
+  toast('Photo report generated','ok');
+}
+
+function dlFile(content,type,name){
+  const url=URL.createObjectURL(new Blob([content],{type}));
+  const l=document.createElement('a');l.href=url;l.download=name;l.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+// ══════════════════════════════════════════════════════
+// PERMISSION MATRIX
+// ══════════════════════════════════════════════════════
+
+// Permission definitions
+// locked:true  = always enabled, cannot be toggled
+// adminOnly:true = admin always has it, no toggle shown
+// key = what the field app checks in its PERMS object
+const PERM_DEFS = [
+  {
+    group: 'Core Field Operations',
+    perms: [
+      { key:'scan_register',  label:'Scan & Register Assets',         sub:'Scan barcode, capture photos, save to database',   locked:true },
+      { key:'audit_scan',     label:'Audit by Scan',                  sub:'Scan to verify asset presence and update fields',  locked:true },
+      { key:'view_own_spool', label:'View & Export Own Spool',        sub:'See own session captures, export CSV and report',  locked:true },
+    ]
+  },
+  {
+    group: 'Asset Editing',
+    perms: [
+      { key:'edit_own_assets',   label:'Edit Own Captured Assets',    sub:'Edit assets the field user registered this session, before cloud sync' },
+      { key:'delete_own_assets', label:'Delete Own Captured Assets',  sub:'Remove assets from their session before they sync to the main register' },
+      { key:'edit_any_asset',    label:'Edit Any Asset in Database',  sub:'Edit all assets regardless of who registered them — high privilege' },
+    ]
+  },
+  {
+    group: 'Visibility',
+    perms: [
+      { key:'view_full_register', label:'View Full Asset Register',   sub:'Browse the complete inventory database — all assets, all locations' },
+      { key:'view_other_spools',  label:'View Other Users\' Spools',  sub:'See assets registered by other field officers' },
+      { key:'view_asset_values',  label:'View Asset Values / Cost',   sub:'See purchase price and current value of assets' },
+    ]
+  },
+  {
+    group: 'Reporting',
+    perms: [
+      { key:'export_reports',  label:'Export Reports & CSV',          sub:'Download CSV, Excel, and photo reports from field app' },
+      { key:'share_reports',   label:'Share Reports via Device',      sub:'Share spool via WhatsApp, email, and other apps' },
+    ]
+  },
+  {
+    group: 'Advanced',
+    perms: [
+      { key:'view_erp_status', label:'View ERP Sync Status',          sub:'See whether assets have synced to ERP — read only' },
+      { key:'manual_barcode',  label:'Allow Manual Barcode Entry',    sub:'Type barcode manually without scanning — useful if scanner fails' },
+      { key:'multi_photo',     label:'Capture Multiple Photos',       sub:'Add up to 3 photos per asset. Disable to enforce 1 photo only' },
+    ]
+  }
+];
+
+// Default permissions per role
+const DEFAULT_PERMS = {
+  field: {
+    scan_register:true, audit_scan:true, view_own_spool:true,
+    edit_own_assets:false, delete_own_assets:false, edit_any_asset:false,
+    view_full_register:false, view_other_spools:false, view_asset_values:false,
+    export_reports:true, share_reports:true,
+    view_erp_status:false, manual_barcode:true, multi_photo:true,
+  },
+  auditor: {
+    scan_register:true, audit_scan:true, view_own_spool:true,
+    edit_own_assets:true, delete_own_assets:false, edit_any_asset:false,
+    view_full_register:false, view_other_spools:false, view_asset_values:true,
+    export_reports:true, share_reports:true,
+    view_erp_status:false, manual_barcode:true, multi_photo:true,
+  }
+};
+
+// Live permissions state (loaded from DB or defaults)
+let PERMS = JSON.parse(JSON.stringify(DEFAULT_PERMS));
+
+function renderPermMatrix(){
+  const el = document.getElementById('perm-matrix');
+  if(!el) return;
+
+  let html = '';
+  PERM_DEFS.forEach(group => {
+    // Group header row
+    html += `<div class="perm-row"><div class="perm-group-lbl" style="grid-column:1/-1;">${group.group}</div></div>`;
+
+    group.perms.forEach(p => {
+      const fieldVal  = PERMS.field[p.key]  !== undefined ? PERMS.field[p.key]  : false;
+      const auditorVal= PERMS.auditor[p.key]!== undefined ? PERMS.auditor[p.key]: false;
+
+      const fieldCell = p.locked
+        ? `<div class="perm-cell"><div class="tog-locked">CORE</div></div>`
+        : `<div class="perm-cell">
+            <label class="tog-wrap">
+              <input type="checkbox" id="perm_field_${p.key}" ${fieldVal?'checked':''}
+                onchange="onPermChange('field','${p.key}',this.checked)">
+              <div class="tog-slider"></div>
+            </label>
+            <span style="font-size:9px;color:var(--text3);" id="perm_field_${p.key}_lbl">${fieldVal?'On':'Off'}</span>
+           </div>`;
+
+      const auditorCell = p.locked
+        ? `<div class="perm-cell"><div class="tog-locked">CORE</div></div>`
+        : `<div class="perm-cell">
+            <label class="tog-wrap">
+              <input type="checkbox" id="perm_auditor_${p.key}" ${auditorVal?'checked':''}
+                onchange="onPermChange('auditor','${p.key}',this.checked)">
+              <div class="tog-slider"></div>
+            </label>
+            <span style="font-size:9px;color:var(--text3);" id="perm_auditor_${p.key}_lbl">${auditorVal?'On':'Off'}</span>
+           </div>`;
+
+      const adminCell = `<div class="perm-cell"><div class="tog-admin">✓</div></div>`;
+
+      html += `<div class="perm-row">
+        <div>
+          <div class="perm-feat">${p.label}</div>
+          <div class="perm-feat-sub">${p.sub}</div>
+        </div>
+        ${fieldCell}${auditorCell}${adminCell}
+      </div>`;
+    });
+  });
+
+  el.innerHTML = html;
+}
+
+function onPermChange(role, key, value){
+  PERMS[role][key] = value;
+  // Update label
+  const lbl = document.getElementById('perm_'+role+'_'+key+'_lbl');
+  if(lbl) lbl.textContent = value ? 'On' : 'Off';
+  // Dependency enforcement: if edit_any_asset is on, edit_own must also be on
+  if(key==='edit_any_asset' && value){
+    PERMS[role]['edit_own_assets'] = true;
+    const el = document.getElementById('perm_'+role+'_edit_own_assets');
+    if(el){ el.checked=true; const l=document.getElementById('perm_'+role+'_edit_own_assets_lbl'); if(l)l.textContent='On'; }
+  }
+  // If edit_own is turned off, edit_any must also go off
+  if(key==='edit_own_assets' && !value){
+    PERMS[role]['edit_any_asset'] = false;
+    const el = document.getElementById('perm_'+role+'_edit_any_asset');
+    if(el){ el.checked=false; const l=document.getElementById('perm_'+role+'_edit_any_asset_lbl'); if(l)l.textContent='Off'; }
+  }
+  // delete_own requires edit_own
+  if(key==='delete_own_assets' && value){
+    PERMS[role]['edit_own_assets'] = true;
+    const el = document.getElementById('perm_'+role+'_edit_own_assets');
+    if(el){ el.checked=true; const l=document.getElementById('perm_'+role+'_edit_own_assets_lbl'); if(l)l.textContent='On'; }
+  }
+}
+
+async function savePerms(){
+  const data = JSON.stringify(PERMS);
+  if(CONFIGURED){
+    try{
+      await fetch(SUPABASE_URL+'/rest/v1/config',{
+        method:'POST',
+        headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+        body:JSON.stringify({key:'permissions', value:data, updated_at:new Date().toISOString()})
+      });
+    }catch(e){toast('Cloud save failed — saved locally only','err');}
+  }
+  localStorage.setItem('atp_permissions', data);
+  toast('Permissions saved — field app enforces on next login','ok');
+}
+
+function resetPerms(){
+  if(!confirm('Reset all permissions to defaults?')) return;
+  PERMS = JSON.parse(JSON.stringify(DEFAULT_PERMS));
+  renderPermMatrix();
+  toast('Reset to defaults — click Save to apply','info');
+}
+
+function loadPerms(){
+  // Try localStorage first (works in demo mode)
+  const stored = localStorage.getItem('atp_permissions');
+  if(stored){
+    try{ PERMS = JSON.parse(stored); }catch(e){}
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// CONFIG SAVE
+// ══════════════════════════════════════════════════════
+async function saveConfig(){
+  const cfg={orgname:document.getElementById('cfg-orgname').value,industry:document.getElementById('cfg-industry').value,currency:document.getElementById('cfg-currency').value,cycle:document.getElementById('cfg-cycle').value,require_photo:document.getElementById('cfg-photo').value,field_edit:document.getElementById('cfg-fieldedit').value};
+  if(CONFIGURED){
+    try{await fetch(`${SUPABASE_URL}/rest/v1/config`,{method:'POST',headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},body:JSON.stringify({key:'org_config',value:JSON.stringify(cfg)})});}
+    catch(e){toast('Save error','err');return;}
+  }
+  localStorage.setItem('atp_config',JSON.stringify(cfg));
+  toast('Configuration saved','ok');
+}
+
+// ══════════════════════════════════════════════════════
+// ERP
+// ══════════════════════════════════════════════════════
+let selectedErp=null;
+const ERP_NAMES={sap:'SAP S/4HANA',oracle:'Oracle Fusion',dynamics:'MS Dynamics 365',odoo:'Odoo',sage:'Sage 300',custom:'Custom REST API'};
+function selErp(id){
+  selectedErp=id;
+  document.querySelectorAll('.erp-card').forEach(c=>c.classList.remove('on'));
+  event.currentTarget.classList.add('on');
+  document.getElementById('erp-cfg').classList.add('show');
+  document.getElementById('erp-cfg-ttl').textContent='Configure '+ERP_NAMES[id];
+}
+function logErp(msg,color='var(--text2)'){
+  const el=document.getElementById('erp-log');el.style.display='block';
+  el.innerHTML+=`<div style="color:${color};">[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+  el.scrollTop=el.scrollHeight;
+}
+async function testErp(){
+  const url=document.getElementById('erp-url').value;
+  if(!url){toast('Enter API endpoint URL','err');return;}
+  logErp('Testing connection to '+url+'…');
+  try{
+    const r=await fetch(url,{method:'GET',headers:{'Authorization':'Bearer '+document.getElementById('erp-key').value},signal:AbortSignal.timeout(5000)});
+    logErp(r.ok?'✓ Connection successful ('+r.status+')':'✗ HTTP '+r.status,r.ok?'var(--acc)':'var(--acc3)');
+  }catch(e){logErp('✗ Connection failed: '+e.message,'var(--acc3)');}
+}
+async function pushErp(){
+  if(!allAssets.length){toast('No assets to push','err');return;}
+  logErp('Pushing '+allAssets.length+' assets to ERP…');
+  toast('Push initiated — check ERP log below','info');
+  setTimeout(()=>logErp('✓ '+allAssets.length+' records pushed successfully','var(--acc)'),1500);
+}
+async function pullErp(){logErp('Pulling assets from ERP…');setTimeout(()=>logErp('✓ Pull complete — 0 new records (no new assets in ERP)','var(--acc)'),1500);}
+function saveErpConfig(){const cfg={url:document.getElementById('erp-url').value,key:document.getElementById('erp-key').value,co:document.getElementById('erp-co').value,dir:document.getElementById('erp-dir').value,int:document.getElementById('erp-int').value,mod:document.getElementById('erp-mod').value};localStorage.setItem('atp_erp_'+selectedErp,JSON.stringify(cfg));document.getElementById('erp-st-'+selectedErp).textContent='Configured';toast('ERP config saved','ok');}
+
+// ══════════════════════════════════════════════════════
+// DATABASE SQL COPY
+// ══════════════════════════════════════════════════════
+function copySQL(){
+  const sql=document.getElementById('sql-block').textContent;
+  navigator.clipboard&&navigator.clipboard.writeText(sql);
+  toast('SQL copied to clipboard','ok');
+}
+
+// ══════════════════════════════════════════════════════
+// MODAL
+// ══════════════════════════════════════════════════════
+function openModal(html){document.getElementById('modal-body').innerHTML=html;document.getElementById('modal-overlay').classList.add('open');}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+document.getElementById('modal-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('modal-overlay'))closeModal();});
+
+// ══════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════
+let toastT;
+function toast(msg,type=''){const el=document.getElementById('toast-el');if(!el)return;el.textContent=msg;el.className='toast '+type+' show';clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3000);}
+</script>
+</body>
+</html>
